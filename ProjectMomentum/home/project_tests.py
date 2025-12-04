@@ -1,3 +1,9 @@
+"""
+Unit tests for trading with momentum project.
+Updated with tests for modern enhancements including multi-factor analysis,
+machine learning components, and risk management features.
+"""
+
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
@@ -178,3 +184,102 @@ def test_analyze_alpha(fn):
             0.208114098207)])
 
     assert_output(fn, fn_inputs, fn_correct_outputs)
+
+
+# ==================== Tests for Enhanced Features ====================
+
+@project_test
+def test_enhanced_analyze_alpha(fn):
+    """Test enhanced alpha analysis with additional metrics."""
+    dates = pd.DatetimeIndex(['2008-08-31', '2008-09-30', '2008-10-31', '2008-11-30'])
+    
+    fn_inputs = {
+        'expected_portfolio_returns_by_date': pd.Series(
+            [0.00000000, 0.00000000, 0.01859903, -0.41819699],
+            dates)}
+    
+    # Should return a dictionary with multiple metrics
+    result = fn(**fn_inputs)
+    
+    assert isinstance(result, dict), "Function should return a dictionary"
+    assert 't_value' in result, "Result should contain t_value"
+    assert 'p_value' in result, "Result should contain p_value"
+    assert 'sharpe_ratio' in result, "Result should contain sharpe_ratio"
+    assert 'max_drawdown' in result, "Result should contain max_drawdown"
+
+
+@project_test
+def test_multi_factor_scoring(fn):
+    """Test multi-factor scoring function."""
+    tickers = generate_random_tickers(5)
+    dates = pd.DatetimeIndex(['2008-08-31', '2008-09-30', '2008-10-31', '2008-11-30'])
+    
+    fn_inputs = {
+        'momentum_scores': pd.DataFrame(
+            np.random.randn(4, 5),
+            dates, tickers),
+        'value_scores': pd.DataFrame(
+            np.random.randn(4, 5),
+            dates, tickers),
+        'size_scores': pd.DataFrame(
+            np.random.randn(4, 5),
+            dates, tickers),
+        'weights': {'momentum': 0.5, 'value': 0.3, 'size': 0.2}
+    }
+    
+    result = fn(**fn_inputs)
+    
+    assert isinstance(result, pd.DataFrame), "Function should return a DataFrame"
+    assert result.shape == (4, 5), "Result should have same shape as inputs"
+
+
+@project_test
+def test_ml_signal_enhancement(fn):
+    """Test ML signal enhancement function."""
+    dates = pd.DatetimeIndex(pd.date_range('2008-01-31', periods=50, freq='M'))
+    n_features = 5
+    
+    fn_inputs = {
+        'features': pd.DataFrame(
+            np.random.randn(50, n_features),
+            index=dates,
+            columns=[f'feature_{i}' for i in range(n_features)]),
+        'target': pd.Series(
+            np.random.randn(50),
+            index=dates),
+        'test_size': 0.2
+    }
+    
+    result = fn(**fn_inputs)
+    
+    assert 'predictions' in result, "Result should contain predictions"
+    assert 'model_score' in result, "Result should contain model_score"
+    assert isinstance(result['predictions'], (pd.Series, np.ndarray)), "Predictions should be Series or array"
+
+
+@project_test  
+def test_dynamic_position_sizing(fn):
+    """Test dynamic position sizing based on volatility."""
+    tickers = generate_random_tickers(5)
+    dates = pd.DatetimeIndex(['2008-08-31', '2008-09-30', '2008-10-31', '2008-11-30'])
+    
+    fn_inputs = {
+        'signals': pd.DataFrame(
+            [[1, 0, 1, -1, 0],
+             [1, 1, 0, -1, -1],
+             [0, 1, 1, 0, -1],
+             [1, 0, -1, 1, 0]],
+            dates, tickers),
+        'volatility': pd.DataFrame(
+            [[0.1, 0.2, 0.15, 0.3, 0.1],
+             [0.12, 0.18, 0.16, 0.28, 0.11],
+             [0.11, 0.19, 0.14, 0.29, 0.12],
+             [0.13, 0.21, 0.17, 0.31, 0.10]],
+            dates, tickers),
+        'target_vol': 0.15
+    }
+    
+    result = fn(**fn_inputs)
+    
+    assert isinstance(result, pd.DataFrame), "Function should return a DataFrame"
+    assert result.shape == fn_inputs['signals'].shape, "Result should have same shape as signals"
